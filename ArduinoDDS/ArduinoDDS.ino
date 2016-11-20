@@ -4,8 +4,8 @@
 // Title		: AVR DDS2 signal generator for Arduino
 // Author		: suke-blog.com
 // Created		: 2016-11-09
-// Revised		: 2016-11-09
-// Version		: 1.0
+// Revised		: 2016-11-20
+// Version		: 1.1
 // Target MCU	: Atmel AVR series ATmega168/328(for Arduino)
 //
 // This code is distributed under the GNU Public License
@@ -26,48 +26,52 @@
 #define MODE_READCOUNT 10
 #define MODE_THRESHOLD (0xE0 * 10)
 
+//debug flag
 bool flag_debug = false;
-
-//export from AVR DDS SignalGenerator
-extern "C" {
-  int avrdds_main(void);
-}
 
 //LiquidCrystal(rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(A0, A1, A2, A3, A4, A5);
 
-extern "C" void debug_write(char *buf){
-  if(flag_debug){
-    Serial.write(buf);
+//LCD/debug function for AVR DDS2 main program
+extern "C" {
+  void debug_write(char *buf){
+    if(flag_debug){
+      Serial.write(buf);
+    }
+  }
+
+  void LCDinit(){}
+
+  void LCDclr(){
+    lcd.clear();
+  }
+
+  void LCDGotoXY(uint8_t col, uint8_t row){
+    lcd.setCursor(col, row);
+  }
+
+  void LCDcursorOFF(){
+    lcd.noCursor();
+  }
+
+  void LCDsendChar(uint8_t ch){
+    lcd.write(ch);
+  }
+
+  void CopyStringtoLCD(const uint8_t *FlashLoc, uint8_t x, uint8_t y){
+    uint8_t i = 0;
+
+    lcd.setCursor(x,y);
+    for(i=0; (uint8_t)pgm_read_byte(&FlashLoc[i]); i++){
+      lcd.write((uint8_t)pgm_read_byte(&FlashLoc[i]));
+    }
   }
 }
 
-extern "C" void LCDinit(){
-}
 
-extern "C" void LCDclr(){
-  lcd.clear();
-}
-
-extern "C" void LCDGotoXY(uint8_t col, uint8_t row){
-  lcd.setCursor(col, row);
-}
-
-extern "C" void LCDcursorOFF(){
-  lcd.noCursor();
-}
-
-extern "C" void LCDsendChar(uint8_t ch){
-  lcd.write(ch);
-}
-
-extern "C" void CopyStringtoLCD(const uint8_t *FlashLoc, uint8_t x, uint8_t y){
-  uint8_t i = 0;
-
-  lcd.setCursor(x,y);
-  for(i=0; (uint8_t)pgm_read_byte(&FlashLoc[i]); i++){
-    lcd.write((uint8_t)pgm_read_byte(&FlashLoc[i]));
-  }
+//AVR DDS SignalGenerator main program
+extern "C" {
+  extern int avrdds_main(void);
 }
 
 void setup() {
